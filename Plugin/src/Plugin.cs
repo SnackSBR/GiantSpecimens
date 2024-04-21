@@ -19,14 +19,17 @@ using GiantSpecimens.Patches;
 using BepInEx.Bootstrap;
 using MoreShipUpgrades;
 using GiantSpecimens.Scrap;
+using MoreShipUpgrades.Misc;
 
-namespace GiantSpecimens {
+namespace GiantSpecimens
+{
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-    [BepInDependency(LethalLib.Plugin.ModGUID)] 
-    [BepInDependency("BMX.LobbyCompatibility", Flags:BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("MaxWasUnavailable.LethalModDataLib", Flags:BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency("com.malco.lethalcompany.moreshipupgrades", Flags:BepInDependency.DependencyFlags.SoftDependency)]
-    public class Plugin : BaseUnityPlugin {
+    [BepInDependency(LethalLib.Plugin.ModGUID)]
+    [BepInDependency("BMX.LobbyCompatibility", Flags: BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("MaxWasUnavailable.LethalModDataLib", Flags: BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency("com.malco.lethalcompany.moreshipupgrades", Flags: BepInDependency.DependencyFlags.SoftDependency)]
+    public class Plugin : BaseUnityPlugin
+    {
         public static Harmony _harmony;
         public static EnemyType PinkGiant;
         public static EnemyType DriftGiant;
@@ -41,11 +44,16 @@ namespace GiantSpecimens {
         public static CauseOfDeath InternalBleed = EnumUtils.Create<CauseOfDeath>("InternalBleed");
         public static CauseOfDeath Thwomped = EnumUtils.Create<CauseOfDeath>("Thwomped");
         public static ThreatType DriftwoodGiant = EnumUtils.Create<ThreatType>("DriftwoodGiant");
+        public static Dictionary<string, Item> samplePrefabs = [];
+        public static bool LGULoaded;
+        BepInEx.PluginInfo LGU;
         // add the causes of death here
-        private void Awake() {
+        private void Awake()
+        {
             Logger = base.Logger;
             // Lobby Compatibility stuff
-            if (LobbyCompatibilityChecker.Enabled) {
+            if (LobbyCompatibilityChecker.Enabled)
+            {
                 LobbyCompatibilityChecker.Init();
             }
             Assets.PopulateAssets();
@@ -60,14 +68,14 @@ namespace GiantSpecimens {
 
             // Redwood Plushie Scrap
             RedWoodPlushie = Assets.MainAssetBundle.LoadAsset<Item>("RedWoodPlushieObj");
-            Utilities.FixMixerGroups(RedWoodPlushie.spawnPrefab); 
+            Utilities.FixMixerGroups(RedWoodPlushie.spawnPrefab);
             NetworkPrefabs.RegisterNetworkPrefab(RedWoodPlushie.spawnPrefab);
             RegisterScrapWithConfig(ModConfig.ConfigRedwoodPlushieEnabled.Value, ModConfig.ConfigRedwoodPlushieRarity.Value, RedWoodPlushie);
 
             // Redwood Heart Scrap
-            RedwoodHeart = Assets.MainAssetBundle.LoadAsset<Item>("RedwoodHeartObj");
-            Utilities.FixMixerGroups(RedwoodHeart.spawnPrefab);
-            NetworkPrefabs.RegisterNetworkPrefab(RedwoodHeart.spawnPrefab);
+            RedWoodHeart = Assets.MainAssetBundle.LoadAsset<Item>("RedwoodHeartObj");
+            Utilities.FixMixerGroups(RedWoodHeart.spawnPrefab);
+            NetworkPrefabs.RegisterNetworkPrefab(RedWoodHeart.spawnPrefab);
 
             // Redwood Giant Enemy
             PinkGiant = Assets.MainAssetBundle.LoadAsset<EnemyType>("PinkGiantObj");
@@ -88,12 +96,23 @@ namespace GiantSpecimens {
             Utilities.FixMixerGroups(DriftwoodSample.spawnPrefab);
             NetworkPrefabs.RegisterNetworkPrefab(DriftwoodSample.spawnPrefab);
 
-            if (Chainloader.PluginInfos.ContainsKey("com.malco.lethalcompany.moreshipupgrades")) {
-                MoreShipUpgrades.API.HunterSamples.RegisterSample(DriftwoodSample, "DriftWoodGiant", 2);
-                MoreShipUpgrades.API.HunterSamples.RegisterSample(RedwoodHeart, "RedWoodGiant", 3);
-            } else {
+            if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU))
+            {
+                LGULoaded = true;
+                Logger.LogInfo($"MNC = {LGU}");
+                RegisterLGUSample(DriftwoodSample, "DriftWoodGiant", 2);
+                RegisterLGUSample(RedWoodHeart, "RedWoodGiant", 3);
+                Destroy(RedWoodHeart.spawnPrefab.GetComponent<RedwoodHeart>());
+            }
+            else
+            {
+                LGULoaded = false;
                 RegisterScrap(DriftwoodSample, 0, LevelTypes.All);
-            } //todo, fix bug with this soft dependency trying to find moreshipupgrades for whatever reason
+                RegisterScrap(RedWoodHeart, 0, LevelTypes.All);
+                samplePrefabs.Add("DriftWoodGiant", DriftwoodSample);
+                samplePrefabs.Add("RedWoodGiant", RedWoodHeart);
+            }
+            //todo, fix bug with this soft dependency trying to find moreshipupgrades for whatever reason
             // todo, fix bug with lgu dropping the sample really weirdly
             // todo, fix the left click not working
             GiantPatches.Init();
@@ -103,39 +122,52 @@ namespace GiantSpecimens {
             // Required by https://github.com/EvaisaDev/UnityNetcodePatcher
             InitializeNetworkBehaviours();
         }
-        private void RegisterEnemyWithConfig(bool enabled, string configMoonRarity, EnemyType enemy, TerminalNode terminalNode, TerminalKeyword terminalKeyword) {
-            if (enabled) { 
+        private void RegisterEnemyWithConfig(bool enabled, string configMoonRarity, EnemyType enemy, TerminalNode terminalNode, TerminalKeyword terminalKeyword)
+        {
+            if (enabled)
+            {
                 (Dictionary<LevelTypes, int> spawnRateByLevelType, Dictionary<string, int> spawnRateByCustomLevelType) = ConfigParsing(configMoonRarity);
                 RegisterEnemy(enemy, spawnRateByLevelType, spawnRateByCustomLevelType, terminalNode, terminalKeyword);
                 return;
-            } else {
+            }
+            else
+            {
                 RegisterEnemy(enemy, 0, LevelTypes.All, terminalNode, terminalKeyword);
                 return;
             }
         }
-        private void RegisterScrapWithConfig(bool enabled, string configMoonRarity, Item scrap) {
-            if (enabled) { 
+        private void RegisterScrapWithConfig(bool enabled, string configMoonRarity, Item scrap)
+        {
+            if (enabled)
+            {
                 (Dictionary<LevelTypes, int> spawnRateByLevelType, Dictionary<string, int> spawnRateByCustomLevelType) = ConfigParsing(configMoonRarity);
                 RegisterScrap(scrap, spawnRateByLevelType, spawnRateByCustomLevelType);
-            } else {
+            }
+            else
+            {
                 RegisterScrap(scrap, 0, LevelTypes.All);
             }
             return;
         }
-        private void RegisterShopItemWithConfig(bool enabledShopItem, bool enabledScrap, Item item, TerminalNode terminalNode, int itemCost, string configMoonRarity) {
-            if (enabledShopItem) { 
+        private void RegisterShopItemWithConfig(bool enabledShopItem, bool enabledScrap, Item item, TerminalNode terminalNode, int itemCost, string configMoonRarity)
+        {
+            if (enabledShopItem)
+            {
                 RegisterShopItem(item, null, null, terminalNode, itemCost);
             }
-            if (enabledScrap) {
+            if (enabledScrap)
+            {
                 RegisterScrapWithConfig(true, configMoonRarity, item);
             }
             return;
         }
-        private (Dictionary<LevelTypes, int> spawnRateByLevelType, Dictionary<string, int> spawnRateByCustomLevelType) ConfigParsing(string configMoonRarity) {
+        private (Dictionary<LevelTypes, int> spawnRateByLevelType, Dictionary<string, int> spawnRateByCustomLevelType) ConfigParsing(string configMoonRarity)
+        {
             Dictionary<LevelTypes, int> spawnRateByLevelType = new Dictionary<LevelTypes, int>();
             Dictionary<string, int> spawnRateByCustomLevelType = new Dictionary<string, int>();
 
-            foreach (string entry in configMoonRarity.Split(',').Select(s => s.Trim())) {
+            foreach (string entry in configMoonRarity.Split(',').Select(s => s.Trim()))
+            {
                 string[] entryParts = entry.Split('@');
 
                 if (entryParts.Length != 2)
@@ -164,8 +196,17 @@ namespace GiantSpecimens {
             }
             return (spawnRateByLevelType, spawnRateByCustomLevelType);
         }
-        private void InitializeNetworkBehaviours() {
-            var types = Assembly.GetExecutingAssembly().GetTypes();
+        private void InitializeNetworkBehaviours()
+        {
+            IEnumerable<Type> types;
+            try
+            {
+                types = Assembly.GetExecutingAssembly().GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                types = e.Types.Where(t => t != null);
+            }
             foreach (var type in types)
             {
                 var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
@@ -179,14 +220,27 @@ namespace GiantSpecimens {
                 }
             }
         }
+
+        private void RegisterLGUSample(Item sample, string monster, int level)
+        {
+            if (LGULoaded)
+            {
+                var type = typeof(MoreShipUpgrades.API.HunterSamples);
+                MethodInfo info = type.GetMethod("RegisterSample", [typeof(Item), typeof(string), typeof(int), typeof(bool), typeof(bool)]);
+                info!.Invoke(null, [sample, monster, level, false, true]);
+            }
+        }
     }
-    public static class Assets {
+    public static class Assets
+    {
         public static AssetBundle MainAssetBundle = null;
-        public static void PopulateAssets() {
+        public static void PopulateAssets()
+        {
             string sAssemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             MainAssetBundle = AssetBundle.LoadFromFile(Path.Combine(sAssemblyLocation, "giantspecimenassets"));
-            if (MainAssetBundle == null) {
+            if (MainAssetBundle == null)
+            {
                 Plugin.Logger.LogError("Failed to load custom assets.");
                 return;
             }
