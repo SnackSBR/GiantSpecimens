@@ -25,7 +25,7 @@ namespace GiantSpecimens {
     [BepInDependency(LethalLib.Plugin.ModGUID)] 
     [BepInDependency("BMX.LobbyCompatibility", Flags:BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", Flags:BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency("malco.Lategame_Upgrades", Flags:BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.malco.lethalcompany.moreshipupgrades", Flags:BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin {
         public static Harmony _harmony;
         public static EnemyType PinkGiant;
@@ -64,6 +64,11 @@ namespace GiantSpecimens {
             NetworkPrefabs.RegisterNetworkPrefab(RedWoodPlushie.spawnPrefab);
             RegisterScrapWithConfig(ModConfig.ConfigRedwoodPlushieEnabled.Value, ModConfig.ConfigRedwoodPlushieRarity.Value, RedWoodPlushie);
 
+            // Redwood Heart Scrap
+            RedwoodHeart = Assets.MainAssetBundle.LoadAsset<Item>("RedwoodHeartObj");
+            Utilities.FixMixerGroups(RedwoodHeart.spawnPrefab);
+            NetworkPrefabs.RegisterNetworkPrefab(RedwoodHeart.spawnPrefab);
+
             // Redwood Giant Enemy
             PinkGiant = Assets.MainAssetBundle.LoadAsset<EnemyType>("PinkGiantObj");
             TerminalNode pgTerminalNode = Assets.MainAssetBundle.LoadAsset<TerminalNode>("PinkGiantTN");
@@ -77,24 +82,19 @@ namespace GiantSpecimens {
             TerminalKeyword dgTerminalKeyword = Assets.MainAssetBundle.LoadAsset<TerminalKeyword>("DriftwoodGiantTK");
             NetworkPrefabs.RegisterNetworkPrefab(DriftGiant.enemyPrefab);
             RegisterEnemyWithConfig(ModConfig.ConfigDriftWoodEnabled.Value, ModConfig.ConfigDriftWoodRarity.Value, DriftGiant, dgTerminalNode, dgTerminalKeyword);
-            
+
             // Driftwood Giant Sample
             DriftwoodSample = Assets.MainAssetBundle.LoadAsset<Item>("DriftWoodGiantSample");
             Utilities.FixMixerGroups(DriftwoodSample.spawnPrefab);
             NetworkPrefabs.RegisterNetworkPrefab(DriftwoodSample.spawnPrefab);
 
-            // Redwood Heart Scrap
-            RedWoodHeart = Assets.MainAssetBundle.LoadAsset<Item>("RedwoodHeartObj");
-            Utilities.FixMixerGroups(RedWoodHeart.spawnPrefab);
-            NetworkPrefabs.RegisterNetworkPrefab(RedWoodHeart.spawnPrefab);
-
-            /*if (Chainloader.PluginInfos.ContainsKey("com.malco.lethalcompany.moreshipupgrades")) {
-                Logger.LogInfo("Moreshipupgrades found");
-                Destroy(RedWoodHeart.spawnPrefab.GetComponent<RedwoodHeart>());
+            if (Chainloader.PluginInfos.ContainsKey("com.malco.lethalcompany.moreshipupgrades")) {
                 MoreShipUpgrades.API.HunterSamples.RegisterSample(DriftwoodSample, "DriftWoodGiant", 2);
-                MoreShipUpgrades.API.HunterSamples.RegisterSample(RedWoodHeart, "RedWoodGiant", 3);
-            } */
-            //todo, fix bug with this soft dependency trying to find moreshipupgrades for whatever reason
+                MoreShipUpgrades.API.HunterSamples.RegisterSample(RedwoodHeart, "RedWoodGiant", 3);
+            } else {
+                RegisterScrap(DriftwoodSample, 0, LevelTypes.All);
+            } //todo, fix bug with this soft dependency trying to find moreshipupgrades for whatever reason
+            // todo, fix bug with lgu dropping the sample really weirdly
             // todo, fix the left click not working
             GiantPatches.Init();
 

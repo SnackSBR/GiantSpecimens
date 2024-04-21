@@ -15,7 +15,8 @@ public static class GiantPatches {
     }
 
     private static void Landmine_SpawnExplosion(On.Landmine.orig_SpawnExplosion orig, Vector3 explosionPosition, bool spawnExplosionEffect, float killRange, float damageRange, int nonLethalDamage, float physicsForce, GameObject overridePrefab) {
-        if (lightningBeingStruckByRedwood) {
+        if (lightningBeingStruckByRedwood)
+        {
             spawnExplosionEffect = true;
             killRange = 0f;
             damageRange = 4f;
