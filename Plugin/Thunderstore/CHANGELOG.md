@@ -1,8 +1,39 @@
+## v 2.0.6 *configs*
+- Added some config options
+- Potentially fixed clients not being thrown up in the air.
+- Potentially fixed client desync for scrap spawning after driftwood and redwood death.
+- Fixed driftwood sample particles not stopping.
+- New icon, fixed wrong sound for scream.
+- Dislike how the lightning looks right now, will mess with it later.
+- Missed with range and eyesight, let me know how the new values are like.
+- Ported to LLL.
+
+## v 2.0.5 *bug fixes*
+- Prettying up the lightning
+- Fixing config not working.
+
+## v 2.0.4 *bug fixes*
+- Potentially fixing problem with insta death with driftwood and player interactions.
+- SHOULD fix driftwood targetting unkillable enemies because of course it did.
+- Added more variant sounds for already existing sounds.
+- Redwood fights old birds back again.
+- Upped how easy it is for the driftwood to see you.
+- Hitting the driftwood causes it to be much more aware of the player.
+- Fixed a bug with being stunned.
+- Fixed animation with slashes being stutter-y when animation is running away.
+
+## v 2.0.2 *bug fixes*
+- Reduced Zeus mode to spawn and death only.
+- Will add a config for Zeus mode later and mess with it to look nice and sound smol.
+
 ## v 2.0.0 NEW ENEMY UPDATE
 - Added Zeus, kinda, just keep an eye out for what the redwood does lmao.
 - Fixed a few bugs that I can't fully remember.
-- Added compatibility with hunter from LateGameUpgrades.
+- Added compatibility with hunter from LateGameUpgrades. (for their next big update, not this one).
 - The Redwood Giant and Driftwood Giant spawn their heart on death.
+- oh and added the driftwood giant lol.
+- Fixed a few sound bugs.
+- Added a new icon for the redwood plushie (someone come make a driftwood plushie thanks).
 
 <details>
   <summary>Older Versions</summary>

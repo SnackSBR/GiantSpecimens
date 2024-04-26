@@ -9,7 +9,7 @@ Mod that adds a variety of giant enemies, part of the forest keeper family, Curr
 
 The Giant Specimens, created by [@Xu Xiaolan](https://thunderstore.io/c/lethal-company/p/XuVELD/HotbarRD/).
 
-(currently adds one enemy, the RedWood Giant, License is public on the github, all rights are reserved)
+(currently adds two enemies, the RedWood Giant and the Driftwood Giant, License is public on the github, all rights are reserved)
 
 -Giant 3D models are inspired by fanart from flameburnt, with help from [EveSculpts](https://www.youtube.com/watch?v=AlPPYkZg9D4&ab_channel=EveSculpts) 2d to 3d tutorials.
 
@@ -34,6 +34,12 @@ The Giant Specimens, created by [@Xu Xiaolan](https://thunderstore.io/c/lethal-c
 -Driftwood Giant animations by shrkiツ
 
 -Redwood Giant animations by shrkiツ
+
+-Redwood Plushie Icon sprite by [@mari0no1](https://thunderstore.io/c/lethal-company/p/Mari0no1/DoorsEscapeMusic/)
+
+-LGU compatibility and other scrap spawning on monster death help by [@SnackS]
+
+-Weather stuff like the lightning bolt by [@mrov](https://thunderstore.io/c/lethal-company/p/mrov/WeatherTweaks/)
 
 -Uh, support me if you'd like on the support button next to Manual Download on thunderstore :p
 
