@@ -571,7 +571,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         } else if (force >= 1) {
             enemyHP -= 1;
         }
-        if (IsOwner && force >= 0 && !isEnemyDead) {
+        if (IsOwner && enemyHP <= 0 && !isEnemyDead) {
             KillEnemyOnOwnerClient();
         }
         LogIfDebugBuild(enemyHP.ToString());

@@ -660,7 +660,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
         }
         enemyHP -= force;
         LogIfDebugBuild("Enemy HP: " + enemyHP);
-        if (IsOwner && force >= 0 && !isEnemyDead) {
+        if (IsOwner && enemyHP <= 0 && !isEnemyDead) {
             KillEnemyOnOwnerClient();
         }
     }
