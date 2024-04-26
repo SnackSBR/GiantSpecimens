@@ -20,6 +20,8 @@ using BepInEx.Bootstrap;
 using MoreShipUpgrades;
 using GiantSpecimens.Scrap;
 using MoreShipUpgrades.Misc;
+using GiantSpecimens.src;
+using MoreShipUpgrades.Managers;
 
 namespace GiantSpecimens;
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -43,6 +45,7 @@ public class Plugin : BaseUnityPlugin {
     public static Dictionary<string, Item> samplePrefabs = [];
     public static bool LGULoaded;
     BepInEx.PluginInfo LGU;
+
     private void Awake() {
         Logger = base.Logger;
         // Lobby Compatibility stuff
@@ -50,6 +53,12 @@ public class Plugin : BaseUnityPlugin {
             LobbyCompatibilityChecker.Init();
         }
         Assets.PopulateAssets();
+
+        GameObject gameObject = new("Utils")
+        {
+            hideFlags = HideFlags.HideAndDontSave
+        };
+        gameObject.AddComponent<Utils>();
 
         ModConfig = new GiantSpecimensConfig(this.Config); // Create the config with the file from here.
         // Whistle Item/Scrap

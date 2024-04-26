@@ -624,8 +624,8 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         transform.Find("Armature").Find("Bone.006.L.001").Find("Bone.006.R").Find("Bone.007.R").Find("Bone.008.R").Find("DeathColliderRightLeg").GetComponent<BoxCollider>().enabled = false;
     }
     public void SpawnHeartOnDeath(Vector3 position) {
-        if (Plugin.ModConfig.ConfigRedwoodHeartEnabled.Value) {
-            Utils.SpawnScrap(Plugin.RedWoodHeart, position);
+        if (Plugin.ModConfig.ConfigRedwoodHeartEnabled.Value && IsHost) {
+            Utils.Instance.SpawnScrap(Plugin.RedWoodHeart, position);
         }
     }
     [ClientRpc]
