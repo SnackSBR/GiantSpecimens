@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace GiantSpecimens.src;
-internal class Utils : MonoBehaviour
+internal class Utils : NetworkBehaviour
 {
     static int seed = StartOfRound.Instance.randomMapSeed;
     static System.Random random = new System.Random(seed + 85);
