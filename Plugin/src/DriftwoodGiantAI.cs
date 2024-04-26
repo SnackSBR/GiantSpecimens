@@ -660,7 +660,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
         }
         enemyHP -= force;
         LogIfDebugBuild("Enemy HP: " + enemyHP);
-        if (IsOwner && enemyHP <= 0 && !isEnemyDead) {
+        if (IsOwner && force >= 0 && !isEnemyDead) {
             KillEnemyOnOwnerClient();
         }
     }
@@ -675,7 +675,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
     }
     public void SpawnHeartOnDeath(Vector3 position) {
         if (Plugin.ModConfig.ConfigDriftwoodHeartEnabled.Value && IsHost) {
-            Utils.Instance.SpawnScrap(Plugin.DriftwoodSample, position);
+            Utils.Instance.SpawnScrapServerRpc("DriftWoodGiant", position);
         }
     }
     [ClientRpc]

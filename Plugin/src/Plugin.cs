@@ -100,20 +100,20 @@ public class Plugin : BaseUnityPlugin {
         Utilities.FixMixerGroups(RedWoodHeart.spawnPrefab);
         NetworkPrefabs.RegisterNetworkPrefab(RedWoodHeart.spawnPrefab);
 
-        /*if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU)) {
-                LGULoaded = true;
-                Logger.LogInfo($"MNC = {LGU}");
-                RegisterLGUSample(DriftwoodSample, "DriftWoodGiant", 2);
-                RegisterLGUSample(RedWoodHeart, "RedWoodGiant", 3);
-                Destroy(RedWoodHeart.spawnPrefab.GetComponent<RedwoodHeart>());
-                Destroy(DriftwoodSample.spawnPrefab.GetComponent<DriftwoodHeart>());
-        } else {*/
+        if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU)) {
+            LGULoaded = true;
+            Logger.LogInfo($"MNC = {LGU}");
+            Destroy(RedWoodHeart.spawnPrefab.GetComponent<RedwoodHeart>());
+            Destroy(DriftwoodSample.spawnPrefab.GetComponent<DriftwoodHeart>());
+            RegisterLGUSample(DriftwoodSample, "DriftWoodGiant", 2, false, typeof(DriftwoodHeart));
+            RegisterLGUSample(RedWoodHeart, "RedWoodGiant", 3, false, typeof(RedwoodHeart));
+        } else {
             LGULoaded = false;
             RegisterScrap(DriftwoodSample, 0, LevelTypes.All);
             RegisterScrap(RedWoodHeart, 0, LevelTypes.All);
             samplePrefabs.Add("DriftWoodGiant", DriftwoodSample);
             samplePrefabs.Add("RedWoodGiant", RedWoodHeart);
-        //}
+        }
         GiantPatches.Init();
 
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -197,11 +197,12 @@ public class Plugin : BaseUnityPlugin {
             }
         }
     }
-    private void RegisterLGUSample(Item sample, string monster, int level) {
+    private void RegisterLGUSample(Item sample, string monster, int level, bool registerNetworkPrefab, Type grabbable) {
         if (LGULoaded) {
             var type = typeof(MoreShipUpgrades.API.HunterSamples);
-            MethodInfo info = type.GetMethod("RegisterSample", [typeof(Item), typeof(string), typeof(int), typeof(bool), typeof(bool)]);
-            info!.Invoke(null, [sample, monster, level, false, true]);
+            MethodInfo info = type.GetMethod("RegisterSample", [typeof(Item), typeof(string), typeof(int), typeof(bool)]);
+            var genericMethod = info.MakeGenericMethod(grabbable);
+            genericMethod!.Invoke(null, [sample, monster, level, registerNetworkPrefab]);
         }
     }
 }
