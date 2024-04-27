@@ -13,6 +13,7 @@ using GiantSpecimens.Colours;
 using GiantSpecimens.Patches;
 using GiantSpecimens.Scrap;
 using GiantSpecimens.src;
+using GiantSpecimens.Configs;
 
 namespace GiantSpecimens.Enemy;
 class PinkGiantAI : EnemyAI, IVisibleThreat {
@@ -81,19 +82,13 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
     [NonSerialized]
     public Vector3 midpoint;
     [NonSerialized]
-    public bool testBuild = true; 
+    public bool testBuild = false; 
     [NonSerialized]
     public LineRenderer line;
     [NonSerialized]
     public System.Random destinationRandom;
     [NonSerialized]
     public bool canMove = true;
-    [NonSerialized]
-    public float cooldownTime;
-    [NonSerialized]
-    public Vector3 distanceFromPosition;
-    [NonSerialized]
-    GameObject striker = null;
     ThreatType IVisibleThreat.type => ThreatType.ForestGiant;
     int IVisibleThreat.SendSpecialBehaviour(int id) {
         return 0; 
@@ -148,7 +143,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         shipBoundaries.localScale *= 1.5f;
         
         Color dustColor = Color.grey; // Default to grey if no color found
-        string footstepColourValue = Plugin.ModConfig.ConfigColourHexcode.Value;
+        string footstepColourValue = GiantSpecimensConfig.ConfigColourHexcode.Value;
         if (string.IsNullOrEmpty(footstepColourValue)) {
             footstepColour = null;
         } else if (Regex.IsMatch(footstepColourValue, "^#?[0-9a-fA-F]{6}$")) {
@@ -171,12 +166,12 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         LogIfDebugBuild(dustColor.ToString());
 
         SpawnableEnemyWithRarity giantEnemyType = RoundManager.Instance.currentLevel.OutsideEnemies.Find(x => x.enemyType.enemyName.Equals("ForestGiant"));
-        if (giantEnemyType != null && Plugin.ModConfig.ConfigMultiplierForestkeeper.Value >= 0) {
-            giantEnemyType.rarity *= Plugin.ModConfig.ConfigMultiplierForestkeeper.Value;                
+        if (giantEnemyType != null && GiantSpecimensConfig.ConfigMultiplierForestkeeper.Value >= 0) {
+            giantEnemyType.rarity *= GiantSpecimensConfig.ConfigMultiplierForestkeeper.Value;                
         }
         SpawnableEnemyWithRarity DriftWoodGiant = RoundManager.Instance.currentLevel.OutsideEnemies.Find(x => x.enemyType.enemyName.Equals("DriftWoodGiant"));
-        if (DriftWoodGiant != null && Plugin.ModConfig.ConfigMultiplierDriftwood.Value >= 0) {
-            DriftWoodGiant.rarity *= Plugin.ModConfig.ConfigMultiplierDriftwood.Value;
+        if (DriftWoodGiant != null && GiantSpecimensConfig.ConfigMultiplierDriftwood.Value >= 0) {
+            DriftWoodGiant.rarity *= GiantSpecimensConfig.ConfigMultiplierDriftwood.Value;
         }
         SpawnableEnemyWithRarity RedWoodGiant = RoundManager.Instance.currentLevel.OutsideEnemies.Find(x => x.enemyType.enemyName.Equals("RedWoodGiant"));
         if (RedWoodGiant != null) {
@@ -193,11 +188,11 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
                 LogIfDebugBuild("Enemy: " + enemy.enemyType.enemyName);
             }
         } */
-        walkingSpeed = Plugin.ModConfig.ConfigSpeedRedWood.Value;
-        distanceFromShip = Plugin.ModConfig.ConfigShipDistanceRedWood.Value;
-        seeableDistance = Plugin.ModConfig.ConfigForestDistanceRedWood.Value;
-        zeusMode = Plugin.ModConfig.ConfigZeusMode.Value;
-        eatOldBirds = Plugin.ModConfig.ConfigEatOldBirds.Value;
+        walkingSpeed = GiantSpecimensConfig.ConfigSpeedRedWood.Value;
+        distanceFromShip = GiantSpecimensConfig.ConfigShipDistanceRedWood.Value;
+        seeableDistance = GiantSpecimensConfig.ConfigForestDistanceRedWood.Value;
+        zeusMode = GiantSpecimensConfig.ConfigZeusMode.Value;
+        eatOldBirds = GiantSpecimensConfig.ConfigEatOldBirds.Value;
 
 
         // LogIfDebugBuild(giantEnemyType.rarity.ToString());
@@ -250,7 +245,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
     public void SearchOrChaseTarget() {
         DoAnimationClientRpc("startWalk");
         LogIfDebugBuild("Start Walking Around");
-        StartSearch(transform.position);
+        StartSearch(ChooseFarthestNodeFromPosition(this.transform.position, avoidLineOfSight: false).position);
         SwitchToBehaviourClientRpc((int)State.SearchingForGiant);
     }
     public override void DoAIInterval() {
@@ -297,6 +292,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
                         closestFoot.data.target = null;
                     }
                 }
+                
                 break;
             case (int)State.RunningToGiant:
                 agent.speed = walkingSpeed * 4;
@@ -304,14 +300,14 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
                 if (targetEnemy == null) {
                     LogIfDebugBuild("Stop Target Giant");
                     DoAnimationClientRpc("startWalk");
-                    StartSearch(transform.position);
+                    StartSearch(ChooseFarthestNodeFromPosition(this.transform.position, avoidLineOfSight: false).position);
                     SwitchToBehaviourClientRpc((int)State.SearchingForGiant);
                     return;
                 }
                 if (Vector3.Distance(transform.position, targetEnemy.transform.position) > seeableDistance && !RWHasLineOfSightToPosition(targetEnemy.transform.position) || Vector3.Distance(targetEnemy.transform.position, shipBoundaries.position) <= distanceFromShip) {
                     LogIfDebugBuild("Stop Target Giant");
                     DoAnimationClientRpc("startWalk");
-                    StartSearch(transform.position);
+                    StartSearch(ChooseFarthestNodeFromPosition(this.transform.position, avoidLineOfSight: false).position);
                     SwitchToBehaviourClientRpc((int)State.SearchingForGiant);
                     return;
                 }
@@ -422,7 +418,15 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         }
     }
     public void ParticlesFromEatingForestKeeper() {
-        ForestKeeperParticles.Play(); // Also make them be affected by the world for proper fog stuff?
+        if (targetEnemy.enemyType.enemyName == "ForestGiant") {
+            ForestKeeperParticles.Play(); // Also make them be affected by the world for proper fog stuff?
+        } else if (targetEnemy.enemyType.enemyName == "DriftWoodGiant") {
+            DriftwoodGiantParticles.Play();
+        } else if (targetEnemy.enemyType.enemyName == "RadMech") {
+            OldBirdParticles.Play();
+        }
+        LogIfDebugBuild(targetEnemy.enemyType.enemyName);
+        targetEnemy.KillEnemyOnOwnerClient(overrideDestroy: true);
     }
     
     public void ShakePlayerCamera() {
@@ -446,7 +450,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
                     HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
                     HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
                     break;
-            } 
+            }
     }
     bool FindClosestAliveGiantInRange(float range) {
         EnemyAI closestEnemy = null;
@@ -513,7 +517,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
     }
     public void EatingTargetGiant() {
         if (targetEnemy == null) return;
-        targetEnemy.KillEnemyOnOwnerClient(overrideDestroy: true);
+        ParticlesFromEatingForestKeeper();
         eatingEnemy = false;
         sizeUp = false;
         waitAfterChase = false;
@@ -615,6 +619,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         transform.Find("Armature").Find("Bone.006.L.001").Find("Bone.006.R").Find("Bone.007.R").Find("Bone.008.R").Find("DeathColliderRightLeg").GetComponent<BoxCollider>().enabled = true;
     }
     public void DisableDeathColliders() {
+        DeathParticles.Play();
         transform.Find("Armature").Find("Bone.006.L.001").Find("Bone").Find("DeathColliderChest").GetComponent<CapsuleCollider>().enabled = false;
         transform.Find("Armature").Find("Bone.006.L.001").Find("Bone.006.L").Find("Bone.007.L").Find("DeathColliderLeftHip").GetComponent<CapsuleCollider>().enabled = false;
         transform.Find("Armature").Find("Bone.006.L.001").Find("Bone.006.L").Find("Bone.007.L").Find("Bone.008.L").Find("DeathColliderLeftLeg").GetComponent<CapsuleCollider>().enabled = false;
@@ -624,7 +629,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         transform.Find("Armature").Find("Bone.006.L.001").Find("Bone.006.R").Find("Bone.007.R").Find("Bone.008.R").Find("DeathColliderRightLeg").GetComponent<BoxCollider>().enabled = false;
     }
     public void SpawnHeartOnDeath(Vector3 position) {
-        if (Plugin.ModConfig.ConfigRedwoodHeartEnabled.Value && IsHost) {
+        if (GiantSpecimensConfig.ConfigRedwoodHeartEnabled.Value && IsHost) {
             Utils.Instance.SpawnScrapServerRpc("RedWoodGiant", position);
         }
     }

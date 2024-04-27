@@ -8,6 +8,7 @@ using UnityEngine.Animations.Rigging;
 using UnityEngine.AI;
 using GiantSpecimens.Patches;
 using GiantSpecimens.src;
+using GiantSpecimens.Configs;
 
 namespace GiantSpecimens.Enemy;
 class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
@@ -160,7 +161,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
         base.Start();
         shipBoundaries = StartOfRound.Instance.shipBounds.transform;
         shipBoundaries.localScale *= 1.1f;
-        screamRange = Plugin.ModConfig.ConfigScreamRange.Value;
+        screamRange = GiantSpecimensConfig.ConfigScreamRange.Value;
         SkinnedMeshRenderer handsRenderer = transform.Find("Body").GetComponent<SkinnedMeshRenderer>();
         if (handsRenderer != null) {
             Material handsMaterial = null;
@@ -425,7 +426,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
         creatureVoice.PlayOneShot(walkSounds[UnityEngine.Random.Range(0, walkSounds.Length)]);
     }
     public IEnumerator ThrowPlayer() {
-        // RightShoulder.data.target = DriftwoodTargetPlayer.transform;
+        RightShoulder.data.target = DriftwoodTargetPlayer.transform;
         yield return new WaitForSeconds(throwAnimation.length+2f);
         try {
             LogIfDebugBuild("Setting Kinematics to true");
@@ -445,7 +446,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
     public void GrabPlayer() {
         GiantPatches.grabbedByGiant = true;
         currentlyGrabbed = true;
-        // RightShoulder.data.target = null;
+        RightShoulder.data.target = null;
     }
     public void ThrowingPlayer() {
         if (DriftwoodTargetPlayer == default || DriftwoodTargetPlayer == null) {
@@ -654,6 +655,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
     }
     public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1) {
         base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
+        if (isEnemyDead) return;
         creatureVoice.PlayOneShot(hitSound[UnityEngine.Random.Range(0, hitSound.Length)]);
         if (force == 6) { 
             RunFarAway();
@@ -670,11 +672,11 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
         DoAnimationClientRpc("startDeath");
         creatureVoice.PlayOneShot(dieSFX);
     }
-    public void RunFarAway() {
+    public void RunFarAway() { // add a new state for running far far away when detecting a nearby redwood.
         SetDestinationToPosition(ChooseFarthestNodeFromPosition(this.transform.position, avoidLineOfSight: false).position, true);
     }
     public void SpawnHeartOnDeath(Vector3 position) {
-        if (Plugin.ModConfig.ConfigDriftwoodHeartEnabled.Value && IsHost) {
+        if (GiantSpecimensConfig.ConfigDriftwoodHeartEnabled.Value && IsHost) {
             Utils.Instance.SpawnScrapServerRpc("DriftWoodGiant", position);
         }
     }

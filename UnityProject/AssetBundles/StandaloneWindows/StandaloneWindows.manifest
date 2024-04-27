@@ -1,7 +1,7 @@
 ManifestFileVersion: 0
-CRC: 1377507123
+CRC: 336213256
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: giantspecimenassets
+      Name: giantspecimenassets.lethalbundle
       Dependencies: {}
