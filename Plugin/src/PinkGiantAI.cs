@@ -575,7 +575,12 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         } else if (force >= 1) {
             enemyHP -= 1;
         }
+        #if DEBUG
+        if (IsOwner && force > 0 && !isEnemyDead)
+        {
+        #else
         if (IsOwner && enemyHP <= 0 && !isEnemyDead) {
+        #endif
             KillEnemyOnOwnerClient();
         }
         LogIfDebugBuild(enemyHP.ToString());
@@ -630,7 +635,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
     }
     public void SpawnHeartOnDeath(Vector3 position) {
         if (GiantSpecimensConfig.ConfigRedwoodHeartEnabled.Value && IsHost) {
-            Utils.Instance.SpawnScrapServerRpc("RedWoodGiant", position);
+            GiantSpecimensUtils.Instance.SpawnScrapServerRpc("RedWoodGiant", position);
         }
     }
     [ClientRpc]

@@ -9,6 +9,7 @@ using UnityEngine.AI;
 using GiantSpecimens.Patches;
 using GiantSpecimens.src;
 using GiantSpecimens.Configs;
+using static UnityEngine.GraphicsBuffer;
 
 namespace GiantSpecimens.Enemy;
 class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
@@ -662,7 +663,12 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
         }
         enemyHP -= force;
         LogIfDebugBuild("Enemy HP: " + enemyHP);
+        #if DEBUG
+        if (IsOwner && force > 0 && !isEnemyDead)
+        {
+        #else
         if (IsOwner && enemyHP <= 0 && !isEnemyDead) {
+        #endif
             KillEnemyOnOwnerClient();
         }
     }
@@ -677,7 +683,7 @@ class DriftwoodGiantAI : EnemyAI, IVisibleThreat {
     }
     public void SpawnHeartOnDeath(Vector3 position) {
         if (GiantSpecimensConfig.ConfigDriftwoodHeartEnabled.Value && IsHost) {
-            Utils.Instance.SpawnScrapServerRpc("DriftWoodGiant", position);
+            GiantSpecimensUtils.Instance.SpawnScrapServerRpc("DriftWoodGiant", position);
         }
     }
     [ClientRpc]
