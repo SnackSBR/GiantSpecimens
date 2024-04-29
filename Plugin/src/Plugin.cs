@@ -24,6 +24,7 @@ namespace GiantSpecimens;
 [BepInDependency("BMX.LobbyCompatibility", Flags:BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("MegaPiggy.EnumUtils", Flags:BepInDependency.DependencyFlags.HardDependency)]
 [BepInDependency(LethalLevelLoader.Plugin.ModGUID)]
+[BepInDependency(MoreShipUpgrades.PluginInfo.PLUGIN_GUID, Flags: BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin {
     public static Harmony _harmony = new(PluginInfo.PLUGIN_GUID);
     public static ExtendedEnemyType PinkGiant;
@@ -59,18 +60,32 @@ public class Plugin : BaseUnityPlugin {
         AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "XuXiaolan");
         AssetBundleLoader.AddOnLethalBundleLoadedListener(OnLethalBundleLoaded, "giantspecimenassets.lethalbundle");
 
-        /*if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU)) {
-                LGULoaded = true;
-                Logger.LogInfo($"MNC = {LGU}");
-                RegisterLGUSample(DriftwoodSample, "DriftWoodGiant", 2);
-                RegisterLGUSample(RedWoodHeart, "RedWoodGiant", 3);
-                Destroy(RedWoodHeart.spawnPrefab.GetComponent<RedwoodHeart>());
-                Destroy(DriftwoodSample.spawnPrefab.GetComponent<DriftwoodHeart>());
-        } else {
-            LGULoaded = false;
-            RegisterScrap(DriftwoodSample, 0, LevelTypes.All);
-            RegisterScrap(RedWoodHeart, 0, LevelTypes.All);*/
-        //}
+        if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU)) {
+            LGULoaded = true;
+            Logger.LogInfo($"MNC = {LGU}");
+
+            Item item = null;
+
+            if (GiantSpecimensConfig.ConfigDriftwoodHeartEnabled.Value) {
+                samplePrefabs.TryGetValue("DriftWoodGiant", out item);
+                if (item != null) {
+                    RegisterLGUSample(item, "DriftWoodGiant", 2, false, true, 50);
+                }
+                else {
+                    Logger.LogInfo($"Error registering DriftWood Giant Sample!");
+                }
+            }
+
+            if (GiantSpecimensConfig.ConfigRedwoodHeartEnabled.Value) {
+                samplePrefabs.TryGetValue("RedWoodGiant", out item);
+                if (item != null) {
+                    RegisterLGUSample(item, "RedWoodGiant", 3, false, true, 50);
+                }
+                else {
+                    Logger.LogInfo($"Error registering RedtWood Giant Sample!");
+                }
+            }
+        }
         GiantPatches.Init();
 
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -150,11 +165,11 @@ public class Plugin : BaseUnityPlugin {
             }
         }
     }
-    private void RegisterLGUSample(Item sample, string monster, int level) {
+    private void RegisterLGUSample(Item sample, string monster, int level, bool registerNetworkPrefab, bool grabbableToEnemies, double weight = 50) {
         if (LGULoaded) {
             var type = typeof(MoreShipUpgrades.API.HunterSamples);
-            MethodInfo info = type.GetMethod("RegisterSample", [typeof(Item), typeof(string), typeof(int), typeof(bool), typeof(bool)]);
-            info!.Invoke(null, [sample, monster, level, false, true]);
+            MethodInfo info = type.GetMethod("RegisterSample", [typeof(Item), typeof(string), typeof(int), typeof(bool), typeof(bool), typeof(double)]);
+            info!.Invoke(null, [sample, monster, level, registerNetworkPrefab, grabbableToEnemies, weight]);
         }
     }
 }
