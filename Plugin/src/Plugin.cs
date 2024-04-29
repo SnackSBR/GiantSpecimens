@@ -151,7 +151,16 @@ public class Plugin : BaseUnityPlugin {
     }
 
     private void InitializeNetworkBehaviours() {
-        var types = Assembly.GetExecutingAssembly().GetTypes();
+        IEnumerable<Type> types;
+        try
+        {
+            types = Assembly.GetExecutingAssembly().GetTypes();
+        }
+        catch (ReflectionTypeLoadException e)
+        {
+            types = e.Types.Where(t => t != null);
+        }
+
         foreach (var type in types)
         {
             var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
