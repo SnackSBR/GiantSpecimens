@@ -2,7 +2,6 @@
 using UnityEngine;
 using BepInEx;
 using HarmonyLib;
-using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
 using System.Collections.Generic;
@@ -39,60 +38,25 @@ public class Plugin : BaseUnityPlugin {
     public static ThreatType DriftwoodGiant = EnumUtils.Create<ThreatType>("DriftwoodGiant");
     public static Dictionary<string, Item> samplePrefabs = [];
     public static bool LGULoaded;
-    BepInEx.PluginInfo LGU;
+    static BepInEx.PluginInfo LGU;
     private void Awake() {
         Logger = base.Logger;
         // Lobby Compatibility stuff
         if (LobbyCompatibilityChecker.Enabled) {
             LobbyCompatibilityChecker.Init();
         }
-        
+
         ModConfig = new GiantSpecimensConfig(this.Config); // Create the config with the file from here.
 
-        // Redwood Giant Enemy
-        //PinkGiant.EnemyType.PowerLevel = GiantSpecimensConfig.ConfigRedwoodGiantPower.Value;
-
-
-        // Driftwood Giant Enemy
-        //DriftGiant.EnemyType.PowerLevel = GiantSpecimensConfig.ConfigDriftwoodGiantPower.Value;
-        // set up the redwood heart and driftwood sample properly
-
-        AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "XuXiaolan");
+        AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "XuuXiaolan");
         AssetBundleLoader.AddOnLethalBundleLoadedListener(OnLethalBundleLoaded, "giantspecimenassets.lethalbundle");
 
-        if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU)) {
-            LGULoaded = true;
-            Logger.LogInfo($"MNC = {LGU}");
-
-            Item item = null;
-
-            if (GiantSpecimensConfig.ConfigDriftwoodHeartEnabled.Value) {
-                samplePrefabs.TryGetValue("DriftWoodGiant", out item);
-                if (item != null) {
-                    RegisterLGUSample(item, "DriftWoodGiant", 2, false, true, 50);
-                }
-                else {
-                    Logger.LogInfo($"Error registering DriftWood Giant Sample!");
-                }
-            }
-
-            if (GiantSpecimensConfig.ConfigRedwoodHeartEnabled.Value) {
-                samplePrefabs.TryGetValue("RedWoodGiant", out item);
-                if (item != null) {
-                    RegisterLGUSample(item, "RedWoodGiant", 3, false, true, 50);
-                }
-                else {
-                    Logger.LogInfo($"Error registering RedtWood Giant Sample!");
-                }
-            }
-        }
         GiantPatches.Init();
 
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
         // Required by https://github.com/EvaisaDev/UnityNetcodePatcher
         InitializeNetworkBehaviours();
-
         _harmony.PatchAll(typeof(StartOfRoundPatcher));
     }
     internal static void OnExtendedModRegistered(ExtendedMod extendedMod) {
@@ -101,8 +65,10 @@ public class Plugin : BaseUnityPlugin {
             List<StringWithRarity> planetNames = new List<StringWithRarity>();
             if (extendedEnemyType.name == "RedwoodExtendedEnemyType") {
                 planetNames = ConfigParsing(GiantSpecimensConfig.ConfigRedWoodRarity.Value);
+                extendedEnemyType.EnemyType.PowerLevel = GiantSpecimensConfig.ConfigRedwoodGiantPower.Value;
             } else if (extendedEnemyType.name == "DriftwoodExtendedEnemyType") {
                 planetNames = ConfigParsing(GiantSpecimensConfig.ConfigDriftWoodRarity.Value);
+                extendedEnemyType.EnemyType.PowerLevel = GiantSpecimensConfig.ConfigDriftwoodGiantPower.Value;
             }
             extendedEnemyType.OutsideLevelMatchingProperties.planetNames.AddRange(planetNames);
             Plugin.Logger.LogInfo($"Configured {extendedEnemyType.name} with new planet names and rarities.");
@@ -110,27 +76,59 @@ public class Plugin : BaseUnityPlugin {
         foreach (ExtendedItem extendedItem in extendedMod.ExtendedItems) {
             List<StringWithRarity> planetNames = new List<StringWithRarity>();
             if (extendedItem.name == "RedwoodPlushieExtendedItem") {
-                if (!GiantSpecimensConfig.ConfigRedwoodPlushieEnabled.Value) continue;
                 planetNames = ConfigParsing(GiantSpecimensConfig.ConfigRedwoodPlushieRarity.Value);
+
             } else if (extendedItem.name == "DriftwoodPlushieExtendedItem") {
-                if (!GiantSpecimensConfig.ConfigDriftWoodPlushieEnabled.Value) continue;
                 planetNames = ConfigParsing(GiantSpecimensConfig.ConfigDriftWoodPlushieRarity.Value);
+
             } else if (extendedItem.name == "WhistleExtendedItem") {
-                if (!GiantSpecimensConfig.ConfigWhistleEnabled.Value) continue;
+                extendedItem.IsBuyableItem = GiantSpecimensConfig.ConfigWhistleEnabled.Value;
+                extendedItem.Item.creditsWorth = GiantSpecimensConfig.ConfigWhistleCost.Value;
                 planetNames = ConfigParsing(GiantSpecimensConfig.ConfigDriftWoodPlushieRarity.Value);
+
             } else if (extendedItem.name == "DriftwoodSampleExtendedItem") {
                 samplePrefabs.Add("DriftWoodGiant", extendedItem.Item);
-                Plugin.Logger.LogInfo(extendedItem.Item);
+                extendedItem.LevelMatchingProperties.planetNames.AddRange(ConfigParsing("Vanilla:0,Custom:0")); // I don't think LLL does this for whatever reason
+
             } else if (extendedItem.name == "RedwoodHeartExtendedItem") {
                 samplePrefabs.Add("RedWoodGiant", extendedItem.Item);
-                Plugin.Logger.LogInfo(extendedItem.Item);
+                extendedItem.LevelMatchingProperties.planetNames.AddRange(ConfigParsing("Vanilla:0,Custom:0")); // I don't think LLL does this for whatever reason
+
             }
             extendedItem.LevelMatchingProperties.planetNames.AddRange(planetNames);
             Plugin.Logger.LogInfo($"Configured {extendedItem.name} with new planet names and rarities.");
         }
+        RunLGUCompatibility();
     }
     internal static void OnLethalBundleLoaded(AssetBundle assetBundle) {
             if (assetBundle == null) return;
+    }
+
+    internal static void RunLGUCompatibility() {
+        if (Chainloader.PluginInfos.TryGetValue(Metadata.GUID, out LGU)) {
+            LGULoaded = true;
+            Logger.LogInfo($"MNC = {LGU}");
+
+            if (GiantSpecimensConfig.ConfigDriftwoodHeartEnabled.Value) {
+                samplePrefabs.TryGetValue("DriftWoodGiant", out Item item);
+                if (item != null) {
+                    RegisterLGUSample(item, "DriftWoodGiant", 2, false, true, 50);
+                }
+                else {
+                    Logger.LogInfo($"Error registering Driftwood Giant Sample!");
+                }
+            }
+
+            if (GiantSpecimensConfig.ConfigRedwoodHeartEnabled.Value) {
+                samplePrefabs.TryGetValue("RedWoodGiant", out Item item);
+                if (item != null) {
+                    RegisterLGUSample(item, "RedWoodGiant", 3, false, true, 50);
+                }
+                else {
+                    Logger.LogInfo($"Error registering Redwood Giant Sample!");
+                }
+            }
+        }
     }
     private static List<StringWithRarity> ConfigParsing(string configMoonRarity) {
         List<StringWithRarity> spawnRates = new List<StringWithRarity>();
@@ -149,7 +147,6 @@ public class Plugin : BaseUnityPlugin {
         }
         return spawnRates;
     }
-
     private void InitializeNetworkBehaviours() {
         IEnumerable<Type> types;
         try
@@ -160,7 +157,6 @@ public class Plugin : BaseUnityPlugin {
         {
             types = e.Types.Where(t => t != null);
         }
-
         foreach (var type in types)
         {
             var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
@@ -174,7 +170,7 @@ public class Plugin : BaseUnityPlugin {
             }
         }
     }
-    private void RegisterLGUSample(Item sample, string monster, int level, bool registerNetworkPrefab, bool grabbableToEnemies, double weight = 50) {
+    private static void RegisterLGUSample(Item sample, string monster, int level, bool registerNetworkPrefab, bool grabbableToEnemies, double weight = 50) {
         if (LGULoaded) {
             var type = typeof(MoreShipUpgrades.API.HunterSamples);
             MethodInfo info = type.GetMethod("RegisterSample", [typeof(Item), typeof(string), typeof(int), typeof(bool), typeof(bool), typeof(double)]);

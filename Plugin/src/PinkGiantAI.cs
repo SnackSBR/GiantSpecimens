@@ -14,6 +14,7 @@ using GiantSpecimens.Patches;
 using GiantSpecimens.Scrap;
 using GiantSpecimens.src;
 using GiantSpecimens.Configs;
+using System.IO;
 
 namespace GiantSpecimens.Enemy;
 class PinkGiantAI : EnemyAI, IVisibleThreat {
@@ -215,7 +216,8 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         if (isEnemyDead) {
             return;
         }
-        
+    }
+    public void LateUpdate() {
         if (currentBehaviourStateIndex == (int)State.EatingGiant && targetEnemy != null) {
             midpoint = leftBone.transform.position;
             targetEnemy.transform.position = midpoint + new Vector3(0, -1f, 0);
@@ -240,7 +242,7 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
             newScale.z *= 0.9995f;
             targetEnemy.transform.localScale = newScale;
             // targetEnemy.transform.position = Vector3.MoveTowards(targetEnemy.transform.position, eatingArea.transform.position, 0.5f);
-        } //Should I have this whole thing be in AIInterval instead?
+        }
     }
     public void SearchOrChaseTarget() {
         DoAnimationClientRpc("startWalk");
@@ -499,20 +501,34 @@ class PinkGiantAI : EnemyAI, IVisibleThreat {
         }
         StopCoroutine(ScalingUp());
     }
-    IEnumerator PauseDuringIdle() {
-        yield return new WaitForSeconds(idle.length);
-        StopCoroutine(PauseDuringIdle());
-    }
     IEnumerator EatForestKeeper() {
         targetEnemy.SetEnemyStunned(true, 10f);
         targetEnemy.creatureVoice.Stop();
         targetEnemy.creatureSFX.Stop();
         EnemyMouthSource.PlayOneShot(eatenSound, 1);
-        SwitchToBehaviourClientRpc((int)State.EatingGiant);
         DoAnimationClientRpc("eatForestKeeper");
+        SwitchToBehaviourClientRpc((int)State.EatingGiant);
         yield return new WaitForSeconds(eating.length);
-        StartCoroutine(PauseDuringIdle());
-        SwitchToBehaviourClientRpc((int)State.IdleAnimation);
+        try {
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies)
+            {
+                if (enemy.enemyType.enemyName == "RadMech")
+                {
+                    RadMechAI rad = enemy as RadMechAI;
+                    targetEnemy.TryGetComponent(out IVisibleThreat threat);
+                    if (threat != null && rad.focusedThreatTransform == threat.GetThreatTransform())
+                    {
+                        LogIfDebugBuild("Stuff is happening!!");
+                        rad.targetedThreatCollider = null;
+                        rad.CheckSightForThreat();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogIfDebugBuild("Problem:" + e.ToString());
+        }
+        DoAnimationClientRpc("startWalk");
+        SwitchToBehaviourClientRpc((int)State.SearchingForGiant);
         StopCoroutine(EatForestKeeper());
     }
     public void EatingTargetGiant() {

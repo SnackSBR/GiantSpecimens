@@ -1,8 +1,30 @@
-## v 2.0.8 *bug fixes*
-- Fixed mod not loading with LLL.
+## v 2.1.2 *bug fixes*
+- Fixed config option with whistle price not working.
+
+## v 2.1.1 *bug fixes*
+- Fixed animation bug with Redwood giant
+- Fixed debug menu not showing my enemy as outside enemy for the people who like testing it.
+- Also stuns work on driftwood now if they didn't before.
+
+## v 2.1.0 NEW BEHAVIOUR
+- Gave the driftwood new behaviour to run away when detecting a redwood or when being attacked by old bird
+
+## v 2.0.10 *LGU COMPAT*
+- Added compatibility with LGU's Hunter plugin, and now if you have LGU you'll need to be a certain hunter level to spawn the items from the giants!
+- Fixed Problem with immersive scrap deleting this mod's configs.
+
+## v 2.0.9 *bug fixes*
+- Fixed some config options not working
+- Spawn weights should be proper and set now, please regen your configs!
+- Fixed scrap not spawning on driftwood and redwood death.
+- Fixed driftwood sample particles not disappearing
+- Spawn Weights are current BUGGED because of an issue with LLL, it'll be fixed in LLL 1.2.3
 
 <details>
   <summary>Older Versions</summary>
+
+## v 2.0.8 *bug fixes*
+- Fixed mod not loading with LLL.
 
 ## v 2.0.7 *bug fixes*
 - Added particle system for driftwood and old bird being eaten.

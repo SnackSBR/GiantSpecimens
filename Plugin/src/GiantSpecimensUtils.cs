@@ -29,9 +29,10 @@ internal class GiantSpecimensUtils : NetworkBehaviour
             seed = StartOfRound.Instance.randomMapSeed;
             random = new System.Random(seed + 85);
         }
+
         if (itemName.Length == 0)
         {
-            Plugin.Logger.LogInfo("itemName empty");
+            Plugin.Logger.LogInfo("itemName is empty");
             return;
         }
         Plugin.samplePrefabs.TryGetValue(itemName, out Item item);

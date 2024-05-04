@@ -2,11 +2,11 @@ using GiantSpecimens.Scrap;
 using HarmonyLib;
 using MoreShipUpgrades.Managers;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Unity.Netcode;
 using UnityEngine;
+using System.Collections;
 using UnityEngine.Assertions;
 
 namespace GiantSpecimens.src;
@@ -21,7 +21,6 @@ internal static class StartOfRoundPatcher {
             }
         }
     }
-
     [HarmonyPatch(nameof(StartOfRound.Awake))]
     [HarmonyPrefix]
     public static void StartOfRound_Start(ref StartOfRound __instance)
@@ -51,11 +50,10 @@ internal static class StartOfRoundPatcher {
                 };
                 go.AddComponent<GiantSpecimensUtils>();
                 go.AddComponent<NetworkObject>();
+                go.GetComponent<NetworkObject>().GlobalObjectIdHash = 4004522770;
                 go.GetComponent<NetworkObject>().Spawn(false);
                 Plugin.Logger.LogInfo("Created GiantSpecimensUtils.");
-            }
-            else
-            {
+            } else {
                 Plugin.Logger.LogWarning("GiantSpecimensUtils already exists?");
             }
         }
