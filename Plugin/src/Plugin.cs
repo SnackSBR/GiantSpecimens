@@ -12,12 +12,10 @@ using GiantSpecimens.Configs;
 using GiantSpecimens.Patches;
 using GiantSpecimens.src;
 using BepInEx.Bootstrap;
-using GiantSpecimens.Scrap;
 using MoreShipUpgrades.Misc;
 using static LethalLib.Modules.Levels;
 using static LethalLib.Modules.Enemies;
 using static LethalLib.Modules.Items;
-using MoreShipUpgrades.Managers;
 using LethalLib.Modules;
 
 namespace GiantSpecimens;
@@ -61,7 +59,7 @@ public class Plugin : BaseUnityPlugin {
 
         // Required by https://github.com/EvaisaDev/UnityNetcodePatcher
         InitializeNetworkBehaviours();
-        _harmony.PatchAll(typeof(StartOfRoundPatcher));
+        //_harmony.PatchAll(typeof(StartOfRoundPatcher));
     }
     internal static void GiantSpecimensScrap() {
         // Whistle Item/Scrap
@@ -81,23 +79,26 @@ public class Plugin : BaseUnityPlugin {
         RedWoodHeart = Assets.MainAssetBundle.LoadAsset<Item>("RedwoodHeartObj");
         Utilities.FixMixerGroups(RedWoodHeart.spawnPrefab);
         NetworkPrefabs.RegisterNetworkPrefab(RedWoodHeart.spawnPrefab);
+        RegisterItem(RedWoodHeart);
 
         // Driftwood Giant Sample
         DriftwoodSample = Assets.MainAssetBundle.LoadAsset<Item>("DriftWoodGiantSample");
         Utilities.FixMixerGroups(DriftwoodSample.spawnPrefab);
         NetworkPrefabs.RegisterNetworkPrefab(DriftwoodSample.spawnPrefab);
+        RegisterItem(DriftwoodSample);
+
         samplePrefabs.Add("RedWoodGiant", RedWoodHeart);
         samplePrefabs.Add("DriftWoodGiant", DriftwoodSample);
 
     }
     internal static void GiantSpecimensEnemies() {
-        // Stellar Sovereign Enemy
+        /*// Stellar Sovereign Enemy
         StellarSovereign = Assets.MainAssetBundle.LoadAsset<EnemyType>("StellarSovereignObj");
         // StellarSovereign.PowerLevel = GiantSpecimensConfig.ConfigStellarSovereignPower.Value;
         TerminalNode ssTerminalNode = Assets.MainAssetBundle.LoadAsset<TerminalNode>("StellarSovereignTN");
         TerminalKeyword ssTerminalKeyword = Assets.MainAssetBundle.LoadAsset<TerminalKeyword>("StellarSovereignTK");
         NetworkPrefabs.RegisterNetworkPrefab(StellarSovereign.enemyPrefab);
-        RegisterEnemyWithConfig(true, "All:9999", StellarSovereign, ssTerminalNode, ssTerminalKeyword);
+        RegisterEnemyWithConfig(true, "All:9999", StellarSovereign, ssTerminalNode, ssTerminalKeyword);*/
 
         // Redwood Giant Enemy
         PinkGiant = Assets.MainAssetBundle.LoadAsset<EnemyType>("PinkGiantObj");

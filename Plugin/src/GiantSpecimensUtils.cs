@@ -1,7 +1,5 @@
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Profiling;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace GiantSpecimens.src;
 internal class GiantSpecimensUtils : NetworkBehaviour
@@ -43,10 +41,8 @@ internal class GiantSpecimensUtils : NetworkBehaviour
         }
         GameObject go = Instantiate(item.spawnPrefab, position + Vector3.up, Quaternion.identity);
         int value = random.Next(minValue: item.minValue, maxValue: item.maxValue);
-        var scanNode = go.gameObject.GetComponentInChildren<ScanNodeProperties>();
-        scanNode.scrapValue = value;
-        scanNode.subText = $"Value: ${value}";
-        go.GetComponent<GrabbableObject>().scrapValue = value;
+        var grabNode = go.gameObject.GetComponentInChildren<GrabbableObject>();
+        grabNode.SetScrapValue(value);
         go.GetComponent<NetworkObject>().Spawn(false);
         UpdateScanNodeClientRpc(go.GetComponent<NetworkObject>(), value);
     }
@@ -54,11 +50,10 @@ internal class GiantSpecimensUtils : NetworkBehaviour
     [ClientRpc]
     public void UpdateScanNodeClientRpc(NetworkObjectReference go, int value) {
         go.TryGet(out NetworkObject netObj);
-        if(netObj != null)
+        if (netObj != null)
         {
-            var scanNode = netObj.GetComponentInChildren<ScanNodeProperties>();
-            scanNode.scrapValue = value;
-            scanNode.subText = $"Value: ${value}";
+            var grabNode = netObj.gameObject.GetComponentInChildren<GrabbableObject>();
+            grabNode.SetScrapValue(value);
         }
     }
 }

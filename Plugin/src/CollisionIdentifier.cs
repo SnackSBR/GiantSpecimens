@@ -1,9 +1,5 @@
-using System.Collections;
 using GameNetcodeStuff;
-using GiantSpecimens.Enemy;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 namespace GiantSpecimens.Collisions;
 public class ColliderIdentifier : MonoBehaviour {
     [SerializeField] public AudioSource CreatureSFX;

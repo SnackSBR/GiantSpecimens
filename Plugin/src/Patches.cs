@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Mono.Cecil.Cil;
-using GameNetcodeStuff;
-using MonoMod.Cil;
-using UnityEngine;
-using UnityEngine.AI;
-using System.Linq;
-using GiantSpecimens.Enemy;
-
 namespace GiantSpecimens.Patches;
 
 public static class GiantPatches {

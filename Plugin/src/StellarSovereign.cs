@@ -3,18 +3,13 @@ using System.Collections;
 using GameNetcodeStuff;
 using Unity.Netcode;
 using UnityEngine;
-using System.Linq;
 using System.Collections.Generic;
 using static UnityEngine.ParticleSystem;
 using UnityEngine.Animations.Rigging;
 using System.Text.RegularExpressions;
 using UnityEngine.AI;
 using GiantSpecimens.Colours;
-using GiantSpecimens.Patches;
-using GiantSpecimens.Scrap;
-using GiantSpecimens.src;
 using GiantSpecimens.Configs;
-using System.IO;
 
 namespace GiantSpecimens.Enemy;
 class StellarSovereignAI : EnemyAI {
@@ -396,7 +391,7 @@ class StellarSovereignAI : EnemyAI {
     }
     public void SpawnHeartOnDeath(Vector3 position) {
         if (GiantSpecimensConfig.ConfigRedwoodHeartEnabled.Value && IsHost && !Plugin.LGULoaded) {
-            GiantSpecimensUtils.Instance.SpawnScrapServerRpc("RedWoodGiant", position);
+            SpawnScrapServerRpc("RedWoodGiant", position);
         }
     }
     [ClientRpc]
@@ -404,5 +399,53 @@ class StellarSovereignAI : EnemyAI {
     {
         LogIfDebugBuild($"Animation: {animationName}");
         creatureAnimator.SetTrigger(animationName);
+    }
+
+    static int seed = 0;
+    static System.Random random;
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SpawnScrapServerRpc(string itemName, Vector3 position)
+    {
+        if (StartOfRound.Instance == null)
+        {
+            Plugin.Logger.LogInfo("StartOfRound null");
+            return;
+        }
+        if (random == null)
+        {
+            Plugin.Logger.LogInfo("Initializing random");
+            seed = StartOfRound.Instance.randomMapSeed;
+            random = new System.Random(seed + 85);
+        }
+
+        if (itemName.Length == 0)
+        {
+            Plugin.Logger.LogInfo("itemName is empty");
+            return;
+        }
+        Plugin.samplePrefabs.TryGetValue(itemName, out Item item);
+        if (item == null)
+        {
+            Plugin.Logger.LogInfo($"Could not get Item {itemName}");
+            return;
+        }
+        GameObject go = Instantiate(item.spawnPrefab, position + Vector3.up, Quaternion.identity);
+        int value = random.Next(minValue: item.minValue, maxValue: item.maxValue);
+        var grabNode = go.gameObject.GetComponentInChildren<GrabbableObject>();
+        grabNode.SetScrapValue(value);
+        go.GetComponent<NetworkObject>().Spawn(false);
+        UpdateScanNodeClientRpc(go.GetComponent<NetworkObject>(), value);
+    }
+
+    [ClientRpc]
+    public void UpdateScanNodeClientRpc(NetworkObjectReference go, int value)
+    {
+        go.TryGet(out NetworkObject netObj);
+        if (netObj != null)
+        {
+            var grabNode = netObj.gameObject.GetComponentInChildren<GrabbableObject>();
+            grabNode.SetScrapValue(value);
+        }
     }
 }

@@ -1,9 +1,7 @@
 
 using System.Collections.Generic;
 using System.Reflection;
-using BepInEx;
 using BepInEx.Configuration;
-using GiantSpecimens.Scrap;
 
 namespace GiantSpecimens.Configs {
     public class GiantSpecimensConfig {
